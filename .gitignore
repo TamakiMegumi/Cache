@@ -1,0 +1,11 @@
+test*.*
+*.backup
+.vscode
+.git
+.idea
+.DS_Store
+.gitmodules
+.gitignore_global
+.gitconfig
+.gitattributes
+.gitkeep
