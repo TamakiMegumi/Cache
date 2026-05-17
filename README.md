@@ -1,4 +1,4 @@
-# KamaCache - A Lightweight In-Memory Cache Server
+# Cache - A Lightweight In-Memory Cache Server
 
 A high-performance, single-threaded key-value storage system implemented in **C++**, inspired by Redis. This project demonstrates the core principles of Linux network programming, including IO multiplexing (Epoll), custom protocol parsing, and efficient memory management.
 
