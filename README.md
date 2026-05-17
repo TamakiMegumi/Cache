@@ -29,3 +29,44 @@ A high-performance, single-threaded key-value storage system implemented in **C+
 ### Compilation
 ```bash
 g++ main.cc cache.cc protocol.cc handler.cc server.cc -o cache -std=c++17
+```
+
+### Running the Server
+```bash
+./cache
+```
+### Testing with Telnet
+```bash
+telnet 127.0.0.1 6379
+```
+### Example Usage
+```bash
+SET name young
++OK
+GET name
+$6
+young
+EXPIRE name 10
+:1
+TTL name
+:9
+```
+### 🏗️Project Structure
+File|Description
+|----|-----------|
+`cache.h/cc`|	Core data structure implementing the Key-Value store and expiration logic.
+`server.h/cc`	|Network layer handling Socket creation, Epoll event loop, and connection management.
+`handler.h/cc`	|Business logic layer parsing commands and interacting with the Cache.
+`protocol.h/cc`	|Utility functions for parsing specific command formats (e.g., SET with EX).
+|||
+
+### 💡 Learning Outcomes
+This project was developed as part of the KamaCache learning path. Key takeaways include:
+
+- Understanding the difference between Blocking IO and IO Multiplexing.
+- Handling TCP stickiness and packet splitting in application-layer protocols.
+- Designing a clean, modular architecture in C++.
+
+### 📝 License
+This project is for educational purposes.
+
