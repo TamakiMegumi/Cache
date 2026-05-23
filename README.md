@@ -15,7 +15,7 @@ A high-performance, single-threaded key-value storage system implemented in **C+
 
 ## 🛠️ Tech Stack
 
-- **Language**: C++17
+- **Language**: C++20
 - **OS**: Linux (Ubuntu 22.04)
 - **Network**: POSIX Sockets, Epoll
 - **Data Structures**: `std::map`, `std::set` for O(log n) lookups and ordered expiration tracking.
@@ -23,23 +23,30 @@ A high-performance, single-threaded key-value storage system implemented in **C+
 ## 📦 How to Build & Run
 
 ### Prerequisites
-- G++ compiler supporting C++17
+
+- G++ compiler supporting C++20
 - Linux environment
 
 ### Compilation
+
 ```bash
-g++ main.cc cache.cc protocol.cc handler.cc server.cc -o cache -std=c++17
+g++ main.cc cache.cc protocol.cc handler.cc server.cc -o cache -std=c++20
 ```
 
 ### Running the Server
+
 ```bash
 ./cache
 ```
+
 ### Testing with Telnet
+
 ```bash
 telnet 127.0.0.1 6379
 ```
+
 ### Example Usage
+
 ```bash
 SET name young
 +OK
@@ -51,16 +58,19 @@ EXPIRE name 10
 TTL name
 :9
 ```
+
 ### 🏗️Project Structure
-File|Description
-|----|-----------|
-`cache.h/cc`|	Core data structure implementing the Key-Value store and expiration logic.
-`server.h/cc`	|Network layer handling Socket creation, Epoll event loop, and connection management.
-`handler.h/cc`	|Business logic layer parsing commands and interacting with the Cache.
-`protocol.h/cc`	|Utility functions for parsing specific command formats (e.g., SET with EX).
-|||
+
+| File            | Description                                                                          |
+| --------------- | ------------------------------------------------------------------------------------ |
+| `cache.h/cc`    | Core data structure implementing the Key-Value store and expiration logic.           |
+| `server.h/cc`   | Network layer handling Socket creation, Epoll event loop, and connection management. |
+| `handler.h/cc`  | Business logic layer parsing commands and interacting with the Cache.                |
+| `protocol.h/cc` | Utility functions for parsing specific command formats (e.g., SET with EX).          |
+|                 |                                                                                      |
 
 ### 💡 Learning Outcomes
+
 This project was developed as part of the KamaCache learning path. Key takeaways include:
 
 - Understanding the difference between Blocking IO and IO Multiplexing.
@@ -68,5 +78,5 @@ This project was developed as part of the KamaCache learning path. Key takeaways
 - Designing a clean, modular architecture in C++.
 
 ### 📝 License
-This project is for educational purposes.
 
+This project is for educational purposes.
