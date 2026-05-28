@@ -1,16 +1,16 @@
 #pragma once
-namespace Cache
+namespace CacheSpace
 {
 
-    template <typename key_t, typename val_t>
+    template <typename Key, typename Value>
     class CacheBase
     {
     protected:
     public:
         virtual ~CacheBase() = default;
-        virtual bool get(key_t key, val_t &val) = 0;
-        virtual void put(key_t key, val_t val) = 0;
-        virtual val_t get(key_t key) = 0;
+        virtual bool get(Key key, Value &val) = 0;
+        virtual void put(Key key, Value val) = 0;
+        virtual Value get(Key key) = 0;
     };
 
 }

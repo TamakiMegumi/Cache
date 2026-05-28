@@ -1,4 +1,5 @@
 test*.*
+build/
 *.backup
 .vscode
 .git
