@@ -3,6 +3,8 @@
 #include <mutex>
 #include <optional>
 #include <unordered_map>
+#include <vector>
+#include <functional>
 #include "cache_base.h"
 namespace CacheSpace
 {
@@ -33,7 +35,7 @@ namespace CacheSpace
     template <typename Key, typename Value>
     class LRUcache : public CacheBase<Key, Value>
     {
-    private:
+    protected:
         int capacity;
         node_map nodeMap;
         std::mutex mut;
@@ -138,8 +140,113 @@ namespace CacheSpace
             }
         }
 
-        void insertNode(node_ptr node);
+        void insertNode(node_ptr node)
+        {
+            node->next = dummyTail;
+            node->prev = dummyTail->prev;
+            dummyTail->prev.lock()->next = node;
+            dummyTail->prev = node;
+        }
 
-        void evictLeastRecent();
+        void evictLeastRecent()
+        {
+            node_ptr leastRecent = dummyHead->next;
+            removeNode(leastRecent);
+            nodeMap.erase(leastRecent->getKey());
+        }
+    };
+
+    template <typename Key, typename Value>
+    class LRUKcache : public LRUcache<Key, Value>
+    {
+    protected:
+        int k;
+        std::unique_ptr<LRUcache<Key, size_t>> hisList;
+        std::unordered_map<Key, Value> hisValMap;
+
+    public:
+        LRUKcache(int capacity, int hisCapacity, in t k)
+            : LRUcache<Key, Value>(capacity),
+              hisList(std::make_unique<LRUcache<Key, size_t>>(hisCapacity)), k(k) {};
+        ~LRUKcache() override = default;
+        Value get(Key key) override
+        {
+            Value value{};
+            bool inMainCache = LRUcache<Key, Value>::get(key, value);
+            size_t hisCnt = hisList->get(key);
+            if (inMainCache)
+            {
+                return value;
+            }
+            if (hisCnt >= k)
+            {
+                auto it = hisValMap.find(key);
+                if (it != hisValMap.end())
+                {
+                    Value storedVal = it->second;
+                    hisList->remove(key);
+                    hisValMap.erase(it);
+                    LRUcache<Key, Value>::put(key, storedVal);
+                    return storedVal;
+                }
+            }
+            return value;
+        }
+
+        void put(Key key, Value val) override
+        {
+            Value existVal{};
+            bool inMainCache = LRUcache<Key, Value>::get(key, existVal);
+            if (inMainCache)
+            {
+                LRUcache<Key, Value>::put(key, val);
+                return;
+            }
+            size_t hisCnt = hisList->get(key);
+            hisCnt++;
+            hisList->put(key, hisCnt);
+            hisValMap[key] = val;
+            if (hisCnt >= k)
+            {
+                hisList->remove(key);
+                hisValMap.erase(key);
+                LRUcache<Key, Value>::put(key, val);
+            }
+        }
+    };
+
+    template <typename Key, typename Value>
+    class HashLRUcache : public CacheBase<Key, Value>
+    {
+    protected:
+        size_t capacity;
+        int slice;
+        std::vector<std::unique_ptr<LRUcache<Key, Value>>>
+            lruSliceCaches;
+        size_t Hash(Key key)
+        {
+            return std::hash<Key>()(key);
+        }
+
+    public:
+        HashLRUcache(size_t capacity, int slice)
+            : capacity(capacity),
+              slice(slice > 0 ? slice : std::thread::hardware_concurrency())
+        {
+            size_t sliceSize = std::ceil(capacity / static_cast<double>(slice));
+            lruSliceCaches.resize(slice, std::make_unique<LRUcache<Key, Value>>(sliceSize));
+        }
+        ~HashLRUcache() override = default;
+        bool get(Key key, Value &value) override
+        {
+            size_t sliceIndex = Hash(key) % slice;
+            return lruSliceCaches[sliceIndex]->get(key, value);
+        }
+        Value get(Key key) override
+        {
+            Value value{};
+            get(key, value);
+            return value;
+        }
     };
 }
