@@ -5,8 +5,8 @@
 #include <unordered_map>
 #include <vector>
 #include <functional>
-#include<thread>
-#include<cmath>
+#include <thread>
+#include <cmath>
 #include "cache_base.h"
 namespace CacheSpace
 {
@@ -16,16 +16,16 @@ namespace CacheSpace
     class LRUNode
     {
 
-      private:
+    private:
         Key key;
         Value val;
         size_t accessCount;
         std::weak_ptr<LRUNode<Key, Value>> prev;
         std::shared_ptr<LRUNode<Key, Value>> next;
 
-      public:
+    public:
         LRUNode(Key key, Value val) : key(key), val(val), accessCount(0), prev(nullptr),
-            next(nullptr) {}
+                                      next(nullptr) {}
 
         Key getKey()
         {
@@ -53,17 +53,19 @@ namespace CacheSpace
     template <typename Key, typename Value>
     class LRUcache : public CacheBase<Key, Value>
     {
-      public:
+    public:
         using node_t = LRUNode<Key, Value>;
         using node_ptr = std::shared_ptr<node_t>;
         using node_map = std::unordered_map<Key, node_ptr>;
-      private:
+
+    private:
         int capacity;
         node_map nodeMap;
         std::mutex mut;
         node_ptr dummyHead;
         node_ptr dummyTail;
-      public:
+
+    public:
         LRUcache(size_t capacity) : capacity(capacity)
         {
             init();
@@ -177,12 +179,12 @@ namespace CacheSpace
     template <typename Key, typename Value>
     class LRUKcache : public LRUcache<Key, Value>
     {
-      protected:
+    protected:
         int k;
         std::unique_ptr<LRUcache<Key, size_t>> hisList;
         std::unordered_map<Key, Value> hisValMap;
 
-      public:
+    public:
         LRUKcache(int capacity, int hisCapacity, int k)
             : LRUcache<Key, Value>(capacity),
               hisList(std::make_unique<LRUcache<Key, size_t>>(hisCapacity)), k(k) {};
@@ -236,17 +238,17 @@ namespace CacheSpace
     template <typename Key, typename Value>
     class HashLRUcache : public CacheBase<Key, Value>
     {
-      protected:
+    protected:
         size_t capacity;
         int slice;
         std::vector<std::unique_ptr<LRUcache<Key, Value>>>
-        lruSliceCaches;
+            lruSliceCaches;
         size_t Hash(Key key)
         {
             return std::hash<Key>()(key);
         }
 
-      public:
+    public:
         HashLRUcache(size_t capacity, int slice)
             : capacity(capacity),
               slice(slice > 0 ? slice : std::thread::hardware_concurrency())
