@@ -183,7 +183,7 @@ namespace CacheSpace
         std::unordered_map<Key, Value> hisValMap;
 
       public:
-        LRUKcache(int capacity, int hisCapacity, in t k)
+        LRUKcache(int capacity, int hisCapacity, int k)
             : LRUcache<Key, Value>(capacity),
               hisList(std::make_unique<LRUcache<Key, size_t>>(hisCapacity)), k(k) {};
         ~LRUKcache() override = default;
