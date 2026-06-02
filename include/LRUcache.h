@@ -24,8 +24,8 @@ namespace CacheSpace
         std::shared_ptr<LRUNode<Key, Value>> next;
 
     public:
-        LRUNode(Key key, Value val) : key(key), val(val), accessCount(0), prev(nullptr),
-                                      next(nullptr) {}
+        LRUNode(Key key, Value val) : key(key), val(val), accessCount(0),
+                                      prev(nullptr), next(nullptr) {}
 
         Key getKey()
         {
@@ -118,6 +118,7 @@ namespace CacheSpace
             }
         }
 
+    private:
         void init()
         {
             dummyHead = std::make_shared<node_t>(Key{}, Value{});
@@ -160,6 +161,7 @@ namespace CacheSpace
             }
         }
 
+        /**push_back node */
         void insertNode(node_ptr node)
         {
             node->next = dummyTail;
@@ -269,4 +271,5 @@ namespace CacheSpace
             return value;
         }
     };
+    
 }
