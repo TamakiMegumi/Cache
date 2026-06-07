@@ -216,7 +216,10 @@ namespace CacheSpace
         LFUcache(int cap, int maxAvg = 10)
             : capacity(cap), minfreq(INT8_MAX), maxAvg(maxAvg),
               curAvg(0), curSum(0) {}
-        ~LFUcache() override = default;
+        ~LFUcache() override
+        {
+            purge();
+        }
         void put(Key key, Value val) override
         {
             if (capacity == 0)
@@ -253,8 +256,13 @@ namespace CacheSpace
         }
         void purge()
         {
+            for (auto &p : freqToList)
+            {
+                delete p.second;
+            }
             nodeMap.clear();
             freqToList.clear();
         }
     };
+
 }
