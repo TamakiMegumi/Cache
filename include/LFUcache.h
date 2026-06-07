@@ -3,6 +3,7 @@
 #include "cache_base.h"
 #include <unordered_map>
 #include <mutex>
+#include <vector>
 namespace CacheSpace
 {
     template <typename Key, typename Value>
@@ -265,4 +266,55 @@ namespace CacheSpace
         }
     };
 
+    template <typename Key, typename Value>
+    class HashLFUcache : public CacheBase<Key, Value>
+    {
+    private:
+        size_t capacity;
+        int sliceNum;
+        std::vector<std::unique_ptr<LFUcache<Key, Value>>> lfuSliceCaches;
+        size_t Hash(Key key)
+        {
+            return std::hash<Key>()(key);
+        }
+
+    public:
+        HashLFUcache(size_t cap, int sliceNum, int maxAvg = 10)
+            : sliceNum(sliceNum > 0 ? sliceNum : std::thread::hardware_concurrency()), capacity(cap)
+        {
+            size_t sliceSize = std::ceil(capacity / static_cast<double>(sliceNum));
+            for (int i = 0; i < sliceNum; i++)
+            {
+                lfuSliceCaches.emplace_back(
+                    std::make_unique<LFUcache<Key, Value>>(sliceSize, maxAvg));
+            }
+        }
+
+        void put(Key key, Value val)
+        {
+            size_t sliceIdx = Hash(key) % sliceNum;
+            lfuSliceCaches[sliceIdx]->put(key, val);
+        }
+
+        bool get(Key key, Value &val)
+        {
+            size_t sliceIdx = Hash(key) % sliceNum;
+            return lfuSliceCaches[sliceIdx]->get(key, val);
+        }
+
+        Value get(Key key)
+        {
+            Value val;
+            get(key, val);
+            return val;
+        }
+
+        void purge()
+        {
+            for (auto &lsc : lfuSliceCaches)
+            {
+                lsc->purge();
+            }
+        }
+    };
 }
