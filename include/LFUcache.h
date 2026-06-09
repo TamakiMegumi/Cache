@@ -99,7 +99,7 @@ namespace CacheSpace
             removeFromFreqList(node);
             addToFreqList(node);
             if (node->freq - 1 == minfreq &&
-                freqToFreqList[node->freq - 1]->isEmpty())
+                freqToList[node->freq - 1]->isEmpty())
             {
                 minfreq++;
             }
@@ -232,7 +232,7 @@ namespace CacheSpace
             if (it != nodeMap.end())
             {
                 it->second->value = val;
-                getInternal(key, val);
+                getInternal(it->second, val);
                 return;
             }
             putInternal(key, val);
