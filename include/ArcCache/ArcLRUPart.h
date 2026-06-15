@@ -33,20 +33,114 @@ namespace CacheSpace
         {
             initializeLists();
         }
-        bool put(Key key, Value val);
-        bool get(Key key,Value& val,bool& shouldTransform);
-        bool chechGhost(Key key);
-        void increaseCapacity(){
+        bool put(Key key, Value val)
+        {
+            if (capacity == 0)
+            {
+                return false;
+            }
+            std::lock_guard<std::mutex> lock(mtx);
+            auto it = mainCache.find(key);
+            if (it != mainCache.end())
+            {
+                return updateExistingNode(it->second, val);
+            }
+            return addNewNode(key, val);
+        }
+        bool get(Key key, Value &val, bool &shouldTransform)
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            auto it = mainCache.find(key);
+            if (it != mainCache.end())
+            {
+                shouldTransform = updateNodeAccess(it->second);
+                val = it->second->getValue();
+                return true;
+            }
+            return false;
+        }
+        bool chechGhost(Key key)
+        {
+            auto it = ghostCache.find(key);
+            if (it != ghostCache.end())
+            {
+                removeFromGhost(it->second);
+                ghostCache.erase(it);
+                return true;
+            }
+        }
+        void increaseCapacity()
+        {
             ++capacity;
         }
-        bool decreaseCapacity();
+        bool decreaseCapacity()
+        {
+            if (capacity <= 0)
+            {
+                return false;
+            }
+            if (mainCache.size() == capacity)
+            {
+                evictLeastRecent();
+            }
+            --capacity;
+            return true;
+        }
+
     private:
-        void initializeLists();
-        bool updateExistingNode(node_ptr node, const Value &);
-        bool addNewNode(const Key &key, const Value &val);
-        bool updateNodeAccess(node_ptr node);
-        void moveToFront(node_ptr node);
-        void addToFront(node_ptr node);
+        void initializeLists()
+        {
+            mainHead = std::make_share<node_t>();
+            mainTail = std::make_share<node_t>();
+            mainHead->next = mainTail;
+            mainTail->prev = mainHead;
+
+            ghostHead = std::make_share<node_t>();
+            ghostTail = std::make_share<node_t>();
+            ghostHead->next = ghostTail;
+            ghostTail->prev = ghostHead;
+        }
+        bool updateExistingNode(node_ptr node, const Value &val)
+        {
+            node->setValue(val);
+            moveToFront(node);
+            return true;
+        }
+        bool addNewNode(const Key &key, const Value &val)
+        {
+            if (mainCache.size() >= capacity)
+            {
+                evictLeastRecent();
+            }
+            node_ptr newNode = std::make_shared<node_t>(key, val);
+            mainCache[key] = newNode;
+            addToFront(newNode);
+            return true;
+        }
+        bool updateNodeAccess(node_ptr node)
+        {
+            moveToFront(node);
+            node->incrementAccessCnt();
+            return node->getAccessCnt() >= transformThreshold;
+        }
+        void moveToFront(node_ptr node)
+        {
+            if (!node->prev.exists() && node->next)
+            {
+                auto prev = node->prev.lock();
+                prev->next = node->next;
+                node->next->prev = node->prev;
+                node->next = nullptr;
+            }
+            addToFront(node);
+        }
+        void addToFront(node_ptr node)
+        {
+            node->next = mainHead->next;
+            node->prev = mainHead;
+            mainHead->next->prev = node;
+            mainHead->next = node;
+        }
         void evictLeastRecent();
         void removeFrmoMain(node_ptr node);
         void removeFromGhost(node_ptr node);
