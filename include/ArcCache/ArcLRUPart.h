@@ -59,7 +59,7 @@ namespace CacheSpace
             }
             return false;
         }
-        bool chechGhost(Key key)
+        bool checkGhost(Key key)
         {
             auto it = ghostCache.find(key);
             if (it != ghostCache.end())
@@ -90,13 +90,13 @@ namespace CacheSpace
     private:
         void initializeLists()
         {
-            mainHead = std::make_share<node_t>();
-            mainTail = std::make_share<node_t>();
+            mainHead = std::make_shared<node_t>();
+            mainTail = std::make_shared<node_t>();
             mainHead->next = mainTail;
             mainTail->prev = mainHead;
 
-            ghostHead = std::make_share<node_t>();
-            ghostTail = std::make_share<node_t>();
+            ghostHead = std::make_shared<node_t>();
+            ghostTail = std::make_shared<node_t>();
             ghostHead->next = ghostTail;
             ghostTail->prev = ghostHead;
         }
@@ -125,7 +125,7 @@ namespace CacheSpace
         }
         void moveToFront(node_ptr node)
         {
-            if (!node->prev.exists() && node->next)
+            if (!node->prev.expired() && node->next)
             {
                 auto prev = node->prev.lock();
                 prev->next = node->next;
@@ -156,7 +156,7 @@ namespace CacheSpace
             addToGhost(least);
             mainCache.erase(least->getKey());
         }
-        void removeFrmoMain(node_ptr node)
+        void removeFromMain(node_ptr node)
         {
             if (!node->prev.expired() && node->next)
             {
