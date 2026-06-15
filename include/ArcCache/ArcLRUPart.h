@@ -141,10 +141,59 @@ namespace CacheSpace
             mainHead->next->prev = node;
             mainHead->next = node;
         }
-        void evictLeastRecent();
-        void removeFrmoMain(node_ptr node);
-        void removeFromGhost(node_ptr node);
-        void addToGhost(node_ptr node);
-        void removeOldestGhost();
+        void evictLeastRecent()
+        {
+            node_ptr least = mainTail->prev.lock();
+            if (!least || least == mainHead)
+            {
+                return;
+            }
+            removeFromMain(least);
+            if (ghostCache.size() >= ghostCapacity)
+            {
+                removeOldestGhost();
+            }
+            addToGhost(least);
+            mainCache.erase(least->getKey());
+        }
+        void removeFrmoMain(node_ptr node)
+        {
+            if (!node->prev.expired() && node->next)
+            {
+                auto prev = node->prev.lock();
+                prev->next = node->next;
+                node->next->prev = node->prev;
+                node->next = nullptr;
+            }
+        }
+        void removeFromGhost(node_ptr node)
+        {
+            if (!node->prev.expired() && node->next)
+            {
+                auto prev = node->prev.lock();
+                prev->next = node->next;
+                node->next->prev = node->prev;
+                node->next = nullptr;
+            }
+        }
+        void addToGhost(node_ptr node)
+        {
+            node->accessCnt = 1;
+            node->next = ghostHead->next;
+            node->prev = ghostHead;
+            ghostHead->next->prev = node;
+            ghostHead->next = node;
+            ghostCache[node->getKey()] = node;
+        }
+        void removeOldestGhost()
+        {
+            node_ptr oldest = ghostTail->prev.lock();
+            if (!oldest || oldest == ghostHead)
+            {
+                return;
+            }
+            removeFromGhost(oldest);
+            ghostCache.erase(oldest->getKey());
+        }
     };
 }
