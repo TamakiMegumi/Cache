@@ -26,17 +26,21 @@ A high-performance, single-threaded key-value storage system implemented in **C+
 
 - G++ compiler supporting C++20
 - Linux environment
+- CMake 3.18 or higher
 
 ### Compilation
 
 ```bash
-g++ main.cc cache.cc protocol.cc handler.cc server.cc -o cache -std=c++20
+mkdir -p build
+cd build
+cmake ..
+make
 ```
 
 ### Running the Server
 
 ```bash
-./cache
+./cache_server
 ```
 
 ### Testing with Telnet
@@ -71,7 +75,7 @@ TTL name
 
 ### 💡 Learning Outcomes
 
-This project was developed as part of the KamaCache learning path. Key takeaways include:
+This project was developed as part of the [KamaCache](https://github.com/youngyangyang04/KamaCache) learning path. Key takeaways include:
 
 - Understanding the difference between Blocking IO and IO Multiplexing.
 - Handling TCP stickiness and packet splitting in application-layer protocols.
